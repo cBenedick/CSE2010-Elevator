@@ -1,50 +1,50 @@
+// move method
+// assume riders and up
 
-// Is in the branch.
 
-package project;
-import java.sql.Time;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Random;
 
-public class MultiplePerson extends Elevator {
+public ArrayList<PassengerReleased> move() {
+		if (!continueOperate()) return null;
+		
+		ArrayList<PassengerReleased> released =
+					new ArrayList<PassengerReleased>();
+		
+		PassengerRequest request = this.servingQueue.remove();
+		
+		long currentTime = Math.max(this.currentTime.getTime(),
+				request.getTimePressedButton().getTime()); // whichever happened latest
+		
+		long timeInMiliseconds = currentTime + 
+				this.doorDelta*1000 +  // delta to open the door
+				1000*this.timeMoveOneFloor* (Math.abs(currentFloor -request.getFloorFrom()))+
+				// time to get to the passenger's floor
+				1000*this.timeMoveOneFloor* (Math.abs(request.getFloorFrom() -request.getFloorTo()))+
+				// time to move to the destination
+				this.doorDelta*1000; // delta to close the door
 
- public MultiplePerson(int capacity, int timeMoveOneFloor,
- int floors, int doorDelta, boolean verbose) {
- super(capacity, timeMoveOneFloor, floors, doorDelta, verbose);
- }
+		PassengerReleased requestReleased = new PassengerReleased(request, 
+				new Time(timeInMiliseconds));
+		
 
- public boolean continueOperate() {
- return true;
- }
+		
+		released.add(requestReleased);
+		if (verbose) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(currentFloor+" / " + request.getFloorFrom() + " / " +request.getFloorTo()+" | ");
+			sb.append(request.getTimePressedButton() + " / " +
+					new Time(timeInMiliseconds));
+			
+			System.out.println(new String(sb));
+		}
+		this.currentTime.setTime(timeInMiliseconds);
+		currentFloor = request.getFloorTo();
+		return released;
+	}
 
- public ArrayList<PassengerReleased> move() {
- ArrayList<PassengerReleased> released =
- new ArrayList<PassengerReleased>();
- return released;
- }
-
-public void initialize(Queue<PassengerRequest> requests) {
- servingQueue = requests;
- }
-
- public static void main(final String[] args) {
- Random rnd = new Random(0);
- Time startingTime = new Time(8,0,0); // 8 am
-
- int maxWeight = 250;
- int capacity = maxWeight * 4;
- int floors = 9;
- int secondsPerFloor = 10; // Between each floor, there is a 10 second wait.
- int timeOpenDoors = 15; // 15 seconds to open the door
- long currentTime = startingTime.getTime();
- int maxSeconds = 200;
- boolean verbose = true;
- int numberOfPassangers = 15; // number of passengers to generate
- Queue<PassengerRequest> elevatorQueue = new LinkedList<PassengerRequest>();
-
- int tempPassenger = numberOfPassangers;
-
- }
-}
+	public boolean continueOperate() {
+		if(this.servingQueue.isEmpty()) {
+			return false;
+		} else{
+			return true;
+		}
+	}
